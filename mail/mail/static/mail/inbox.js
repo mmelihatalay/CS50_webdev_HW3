@@ -54,6 +54,25 @@ function compose_email() {
   document.querySelector("#compose-body").value = "";
 }
 
+function reply_email(email) {
+    // Show compose view and hide other views
+    document.querySelector("#emails-view").style.display = "none";
+    document.querySelector("#compose-view").style.display = "block";
+    document.querySelector("#email-view").style.display = "none";
+  
+    // Clear out composition fields
+  document.querySelector("#compose-recipients").value = email.sender;
+  console.log(email.subject.search("Re: "))
+  let subject;
+  if (email.subject.search("Re: ")!==-1){
+    subject = email.subject;
+  } else {
+    subject = `Re: ${email.subject}`;
+  }
+    document.querySelector("#compose-subject").value = subject;
+    document.querySelector("#compose-body").value = `\n-----------------------------------------------\n on ${email.timestamp} ${email.sender} wrote:\n\n${email.body}`;
+}
+
 function load_mailbox(mailbox) {
   // Show the mailbox and hide other views
   document.querySelector("#emails-view").style.display = "block";
@@ -95,8 +114,9 @@ function show_email(email) {
     email.sender
   }</h4><h4><b>To:</b> ${email.recipients}</h4><h4><b>Subject:</b> ${
     email.subject
-  }</h4><h5><b>Time:</b> ${email.timestamp}</h5><hr><p>${email.body}</p>`;
+  }</h4><h5><b>Time:</b> ${email.timestamp}</h5><hr><p>${email.body.replaceAll("\n","<br>")}</p><a id="reply" class="btn btn-primary">Reply</a>`;
   document.querySelector("#email-view").appendChild(element);
+  document.getElementById("reply").addEventListener("click", () => reply_email(email))
   document.getElementById("check").addEventListener("click", () => {
     fetch(`/emails/${email.id}`, {
       method: "PUT",
@@ -109,12 +129,6 @@ function show_email(email) {
     }, 100);
   });
 
-  /*   fetch(`/emails/${email.id}`)
-    .then((response) => response.json())
-    .then((email) => {
-      console.log(email);
-    });
- */
   fetch(`/emails/${email.id}`, {
     method: "PUT",
     body: JSON.stringify({
